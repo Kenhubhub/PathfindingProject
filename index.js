@@ -1,8 +1,10 @@
 const grid = document.getElementById("grid");
+const form = document.getElementById("form")
 // Obtain objects with square class 
 // Arithmetic to obtain coordinates for current square
 // compare each square with target coordinates and xc and yc
-
+let start = null;
+let target = null;
 const sizeSquare = 50;
 let Squares = []
 const compareCoord = (coord1, coord2)=>{
@@ -23,9 +25,9 @@ const setNeighbours = (squares,squareElements)=>{
         const bl = {x:x-1,y:y+1};
         const tr ={x: x+1, y:y-1};
         const br = {x: x+1, y:y+1};
-        squareElements.forEach( element =>{
-            const xc = element.getAttribute("xc");
-            const yc = element.getAttribute("yc");
+        squares.forEach( element =>{
+            const xc = element.square.getAttribute("xc");
+            const yc = element.square.getAttribute("yc");
             const elementcoord = {x:xc,y:yc};
             compareCoord(left,elementcoord) ? square.neighbours.push(element) : false;
             compareCoord(right,elementcoord) ? square.neighbours.push(element) : false; 
@@ -39,15 +41,54 @@ const setNeighbours = (squares,squareElements)=>{
     
     })
 }
-grid.addEventListener("click",e=>{
-     e.target.style.backgroundColor = "red";
-     setNeighbours(Squares,Array.from(document.getElementsByClassName("square")));
-     Squares.forEach(square =>{
-        console.log("here be neighbours");
-        console.log(square.neighbours)
-     })
+grid.addEventListener("click",async e=>{
+    if(!start){
+        e.target.style.backgroundColor = "red";
+        start = e.target;
+    }else if(!target){
+        e.target.style.backgroundColor = "green";
+        target = e.target;
+    }
+    if(start && target){
+        Squares.forEach(s => {
+            if(s.square.style.backgroundColor ==="red"){
+                console.log("found start",s)
+                s.start = true;
+                start = s;
+            }
+            if(s.square.style.backgroundColor === "green"){
+                s.target = true;
+                target = s;
+            }
+        })
+        // const bfs = new BFS(start,target)
+        // await bfs.Search();
+        // const dfs = new DFS(start,target);
+        // await dfs.Search();
+        
+    }
+    
 })
-
+form.addEventListener("submit", async e=>{
+    e.preventDefault();
+    console.log(form.selected.value);
+    if(start && target){
+        switch(form.selected.value){
+            case "1":
+                const dfs = new DFS(start,target);
+                await dfs.Search();
+                break;
+            case "2":
+                 const bfs = new BFS(start,target)
+                 await bfs.Search();
+                 break;
+            case "3":
+                const greedy = new Greedy(start,target);
+                 await greedy.Search();
+                 break;
+        }
+    }
+})
 class Square{
     constructor(){  
         this.createSquare();
@@ -55,6 +96,10 @@ class Square{
         this.y;
         this.nc = [];
         this.neighbours = [];
+        this.target = false;
+        this.start = false;
+        this.explored = false;
+        this.weight;
     }
     createSquare(){
         const square = document.createElement("div");
@@ -100,6 +145,8 @@ const main = ()=>{
     const newGrid = new Grid(height,width);
     newGrid.gridInit();
     Squares = newGrid.squares;
+    setNeighbours(Squares,Array.from(document.getElementsByClassName("square")));
+    
 }
 
 main();
